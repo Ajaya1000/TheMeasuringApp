@@ -47,7 +47,7 @@ class Plane: SCNNode {
         let gridMaterial = giveGridMaterial()
         let transparentMaterial = transParentMaterial()
         
-        planeGeometry?.materials = [transparentMaterial, transparentMaterial, transparentMaterial, transparentMaterial, gridMaterial, transparentMaterial]
+        planeGeometry?.materials = [transparentMaterial, transparentMaterial, transparentMaterial, transparentMaterial, transparentMaterial, transparentMaterial]
         setupPlaneNode(planeHeight: z)
         setTextureScale()
     }

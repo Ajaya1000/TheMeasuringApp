@@ -65,11 +65,11 @@ class ViewController: UIViewController {
         sceneView.delegate = self
         
         // showing statitics (fps, timing info)
-        sceneView.showsStatistics = true
+//        sceneView.showsStatistics = true
         sceneView.autoenablesDefaultLighting = true
         
         // debug points
-        sceneView.debugOptions = [.showFeaturePoints, .showWorldOrigin]
+//        sceneView.debugOptions = [.showFeaturePoints, .showWorldOrigin]
         
         // create new scene
         let scene = SCNScene()
