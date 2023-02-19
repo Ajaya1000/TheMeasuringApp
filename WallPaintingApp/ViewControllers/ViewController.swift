@@ -13,6 +13,9 @@ class ViewController: UIViewController {
     // MARK: - IBOutlets
     @IBOutlet weak var sceneView: ARSCNView!
     
+    // MARK: - Private Properties
+    var dictPlanes = [ARPlaneAnchor: Plane]()
+    
     // MARK: - Life Cycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -70,7 +73,25 @@ extension ViewController: ARSCNViewDelegate {
                 let plane = Plane(anchor: planeAnchor)
                 // add to the detected
                 node.addChildNode(plane)
+                
+                self.dictPlanes[planeAnchor] = plane
             }
+        }
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        DispatchQueue.main.async {
+            if let planeAnchor = anchor as? ARPlaneAnchor {
+                let plane = self.dictPlanes[planeAnchor]
+                
+                plane?.updateWith(planeAnchor)
+            }
+        }
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
+        if let planeAnchor = anchor as? ARPlaneAnchor {
+            dictPlanes.removeValue(forKey: planeAnchor)
         }
     }
 }

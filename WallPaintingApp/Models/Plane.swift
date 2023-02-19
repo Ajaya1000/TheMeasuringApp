@@ -24,6 +24,16 @@ class Plane: SCNNode {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Public Methods
+    func updateWith(_ anchor: ARPlaneAnchor) {
+        planeGeometry?.width = CGFloat(anchor.extent.x)
+        planeGeometry?.length = CGFloat(anchor.extent.z)
+        
+        self.position = SCNVector3(anchor.center.x, 0, anchor.center.z)
+        
+        setTextureScale()
+    }
+    
     // MARK: - Private Methods
     private func setupPlaneGeometry(anchor: ARPlaneAnchor) {
         // dimensions
