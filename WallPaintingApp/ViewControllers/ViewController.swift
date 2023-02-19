@@ -52,6 +52,16 @@ class ViewController: UIViewController {
             return
         }
         
+        if startNode != nil {
+            startNode = nil
+            lineNode = nil
+            
+            let node = nodeWithPosition(position)
+            sceneView.scene.rootNode.addChildNode(node)
+            
+            return
+        }
+        
         let node = nodeWithPosition(position)
         sceneView.scene.rootNode.addChildNode(node)
         
