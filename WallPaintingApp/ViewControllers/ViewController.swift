@@ -8,10 +8,19 @@
 import UIKit
 import ARKit
 
+enum DistanceUnit {
+    case meters
+    case kilometers
+    case feet
+    case miles
+    case cm
+}
+
 class ViewController: UIViewController {
     
     // MARK: - IBOutlets
     @IBOutlet weak var sceneView: ARSCNView!
+    @IBOutlet weak var descriptionLabel: UILabel!
     
     // MARK: - Private Properties
     var dictPlanes = [ARPlaneAnchor: Plane]()
@@ -149,29 +158,98 @@ extension ViewController: ARSCNViewDelegate {
             
             guard let lineNode = self.lineNode else { return }
             self.sceneView.scene.rootNode.addChildNode(lineNode)
+            
+            let desc = self.getDistanceStringBetween(pos1: currentPosition, pos2: start.position)
+            self.descriptionLabel.text = desc
         }
     }
 }
 
 // MARK: - Making Line Node
 extension ViewController {
-    private func getDrawnLineFrom(from pos1: SCNVector3, to pos2: SCNVector3) -> SCNNode {
-        let line = lineFrom(from: pos1, to: pos2)
-        
-        // set the material color
-        let material = SCNMaterial()
-        material.diffuse.contents = Colors.red
-        line.firstMaterial = material
-        
-        let lineNode = SCNNode(geometry: line)
-        
-        return lineNode
-    }
+//    private func getDrawnLineFrom(from pos1: SCNVector3, to pos2: SCNVector3) -> SCNNode {
+//        let line = lineFrom(from: pos1, to: pos2)
+//
+//        // set the material color
+//        let material = SCNMaterial()
+//        material.diffuse.contents = UIColor.red
+//        line.materials = [material]
+//        line.firstMaterial?.diffuse.contents = UIColor.red
+//        line.firstMaterial?.isDoubleSided = true
+//
+//        let lineNode = SCNNode(geometry: line)
+//
+//        return lineNode
+//    }
+//
+//    private func lineFrom(from vector1: SCNVector3, to vector2: SCNVector3) -> SCNGeometry {
+//        let indices: [Int32] = [0, 1]
+//        let source = SCNGeometrySource(vertices: [vector1, vector2])
+//        let element = SCNGeometryElement(indices: indices, primitiveType: .line)
+//        return .init(sources: [source], elements: [element])
+//    }
     
-    private func lineFrom(from vector1: SCNVector3, to vector2: SCNVector3) -> SCNGeometry {
-        let indices: [Int32] = [0, 1]
-        let source = SCNGeometrySource(vertices: [vector1, vector2])
+    func getDrawnLineFrom(from pos1: SCNVector3, to pos2: SCNVector3, color: UIColor = Colors.red, thickness: CGFloat = 0.1) -> SCNNode {
+        // Create a geometry to represent the line
+        let indices: [UInt32] = [0, 1]
+        let source = SCNGeometrySource(vertices: [pos1, pos2])
         let element = SCNGeometryElement(indices: indices, primitiveType: .line)
-        return .init(sources: [source], elements: [element])
+        let geometry = SCNGeometry(sources: [source], elements: [element])
+
+        // Create a custom shader modifier to set the line's color and thickness
+        let shaderModifier = """
+            _geometry {
+                vec3 start = _geometry.position.xyz;
+                vec3 end = _geometry.position1.xyz;
+                vec3 dir = end - start;
+                float len = length(dir);
+                dir = normalize(dir);
+                vec3 point = start + dir * (_surface.diffuse.a - 0.5) * len * \(thickness);
+
+                float t = length(point - start) / len;
+
+                if (t < 0.05 || t > 0.95) {
+                    discard;
+                }
+
+                _surface.diffuse.rgb = \(color.rgbComponents);
+                _output.color = _surface.diffuse;
+            }
+        """
+
+        // Set the custom shader modifier on the geometry
+        geometry.shaderModifiers = [.surface: shaderModifier]
+
+        // Create a node to hold the geometry
+        let node = SCNNode(geometry: geometry)
+
+        return node
+    }
+
+}
+
+extension ViewController {
+    private func getDistanceStringBetween(pos1: SCNVector3?, pos2: SCNVector3?, unit: DistanceUnit = .cm) -> String {
+        guard let p1 = pos1, let p2 = pos2 else {
+            return "Invalid positions"
+        }
+        
+        let distance = p1.distance(to: p2)
+        
+        var distanceString: String
+        switch unit {
+        case .meters:
+            distanceString = String(format: "%.2f", distance) + " m"
+        case .kilometers:
+            distanceString = String(format: "%.2f", distance/1000) + " km"
+        case .feet:
+            distanceString = String(format: "%.2f", distance*3.28084) + " ft"
+        case .miles:
+            distanceString = String(format: "%.2f", distance*0.000621371) + " mi"
+        case .cm:
+            distanceString = String(format: "%.2f", distance * 100) + " cm"
+        }
+        
+        return "\(distanceString) apart"
     }
 }
