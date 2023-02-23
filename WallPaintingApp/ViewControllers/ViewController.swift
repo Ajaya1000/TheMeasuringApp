@@ -26,6 +26,7 @@ class ViewController: UIViewController {
     var dictPlanes = [ARPlaneAnchor: Plane]()
     private var startNode: SCNNode?
     private var lineNode: SCNNode?
+    private var textNode: SCNNode?
     
     // MARK: - Life Cycle Methods
     override func viewDidLoad() {
@@ -33,6 +34,7 @@ class ViewController: UIViewController {
         
         // set up scene
         setupScene()
+        descriptionLabel.isHidden = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -55,6 +57,7 @@ class ViewController: UIViewController {
         if startNode != nil {
             startNode = nil
             lineNode = nil
+            textNode = nil
             
             let node = nodeWithPosition(position)
             sceneView.scene.rootNode.addChildNode(node)
@@ -163,14 +166,21 @@ extension ViewController: ARSCNViewDelegate {
                 return
             }
             
+            // Removing Extsting Nodes
             self.lineNode?.removeFromParentNode()
-            self.lineNode = self.getDrawnLineFrom(from: currentPosition, to: start.position)
+            self.textNode?.removeFromParentNode()
             
+            // Adding Line Node
+            self.lineNode = self.getDrawnLineFrom(from: currentPosition, to: start.position)
             guard let lineNode = self.lineNode else { return }
             self.sceneView.scene.rootNode.addChildNode(lineNode)
             
+            // Adding Text Node
             let desc = self.getDistanceStringBetween(pos1: currentPosition, pos2: start.position)
-            self.descriptionLabel.text = desc
+            self.textNode = self.giveTextNode(text: desc, start: start.position, end: currentPosition)
+            guard let textNode = self.textNode else { return }
+//            self.sceneView.scene.rootNode.
+            lineNode.addChildNode(textNode)
         }
     }
 }
@@ -235,9 +245,9 @@ extension ViewController {
 
         return node
     }
-
 }
 
+// MARK: - getting label
 extension ViewController {
     private func getDistanceStringBetween(pos1: SCNVector3?, pos2: SCNVector3?, unit: DistanceUnit = .cm) -> String {
         guard let p1 = pos1, let p2 = pos2 else {
@@ -262,4 +272,34 @@ extension ViewController {
         
         return "\(distanceString) apart"
     }
+    
+    private func giveTextNode(text: String, scale: CGFloat = 0.001, color: UIColor = .white, start position1: SCNVector3, end position2: SCNVector3) -> SCNNode {
+        // Create a new SCNText geometry with the desired text, font, and size
+        let textGeometry = SCNText(string: text, extrusionDepth: 3.0) //SCNBox(width: 0.01, height: 0.01, length: 0.01, chamferRadius: 0)
+
+        let material = SCNMaterial()
+        material.diffuse.contents = UIColor.white
+        textGeometry.materials = [material]
+
+        // Create a new SCNNode with the SCNText geometry as its geometry property
+        let textNode = SCNNode(geometry: textGeometry)
+
+        // Set the position of the textNode along the line
+        let textNodePosition = (position2 + position1) / 2.0
+
+        textNode.position = textNodePosition
+        textNode.scale = SCNVector3(0.001, 0.001, 0.001)
+        
+        // Rotate the textNode to align with the lineNode
+        let rotationAxis = (position2 - position1).normalized()
+        
+        
+        let rotationX = asin(rotationAxis.x)
+        let rotationY = 0.0 as Float //asin(rotationAxis.y)
+        let rotationZ = asin(rotationAxis.z)
+        textNode.eulerAngles = SCNVector3(-rotationX, -rotationY, rotationZ)
+
+        return textNode
+    }
+
 }

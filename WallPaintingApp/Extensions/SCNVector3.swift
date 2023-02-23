@@ -36,5 +36,14 @@ extension SCNVector3 {
             return SCNVector3(x / length, y / length, z / length)
         }
     }
+    
+    func length() -> Float {
+        return sqrt(x * x + y * y + z * z)
+    }
+    
+    func getEulerAngle() -> SCNVector3 {
+        let rotationMatrix = SCNMatrix4MakeRotation(self.x, 1.0, 0.0, 1.0)
+        return rotationMatrix.eulerAngles
+    }
 }
 
