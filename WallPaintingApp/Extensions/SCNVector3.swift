@@ -45,5 +45,20 @@ extension SCNVector3 {
         let rotationMatrix = SCNMatrix4MakeRotation(self.x, 1.0, 0.0, 1.0)
         return rotationMatrix.eulerAngles
     }
+    
+    func dot(_ vector: SCNVector3) -> Float {
+        
+        return (self.x * vector.x) + (self.y * vector.y) + (self.z * vector.z)
+    }
+    
+    func angle(with vector: SCNVector3) -> Float {
+        let vector1 = self.normalized()
+        let vector2 = vector.normalized()
+        
+        let dotProduct = vector1.dot(vector2)
+        let theta = acos(dotProduct)
+        
+        return deg2rad(theta)
+    }
 }
 

@@ -291,13 +291,14 @@ extension ViewController {
         textNode.scale = SCNVector3(0.001, 0.001, 0.001)
         
         // Rotate the textNode to align with the lineNode
-        let rotationAxis = (position2 - position1).normalized()
+        var lineVector = position2 - position1
+        lineVector = SCNVector3(x: lineVector.x, y: 0, z: lineVector.z)
+        let xAxis = SCNVector3(x: 1, y: 0, z: 0)
         
-        
-        let rotationX = asin(rotationAxis.x)
-        let rotationY = 0.0 as Float //asin(rotationAxis.y)
-        let rotationZ = asin(rotationAxis.z)
-        textNode.eulerAngles = SCNVector3(-rotationX, -rotationY, rotationZ)
+        let angle = lineVector.angle(with: xAxis)
+//        let rotationY = asin(rotationAxis.y)
+//        let rotationZ = asin(rotationAxis.z)
+        textNode.eulerAngles = SCNVector3( .pi * -0.5, -angle, 0)
 
         return textNode
     }
